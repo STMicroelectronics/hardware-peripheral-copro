@@ -1,0 +1,4 @@
+service vendor.copro-hal-1-0 /vendor/bin/hw/android.hardware.copro@1.0-service.stm32mp1
+    class hal
+    user system
+    group system
