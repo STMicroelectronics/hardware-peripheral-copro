@@ -28,6 +28,8 @@ struct CoproSerialPort : public ICoproSerialPortHal {
     Return<void> close(close_cb _hidl_cb);
     Return<void> read(read_cb _hidl_cb);
     Return<void> write(const hidl_string& command, write_cb _hidl_cb);
+    Return<void> readB(const uint32_t size, readB_cb _hidl_cb);
+    Return<void> writeB(const hidl_vec<uint8_t>& command, writeB_cb _hidl_cb);
 
     private:
 

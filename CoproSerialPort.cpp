@@ -160,6 +160,40 @@ namespace implementation {
         return Void();
     }
 
+    Return<void> CoproSerialPort::readB(const uint32_t size, ICoproSerialPortHal::readB_cb _hidl_cb) {
+        RequestStatus ret;
+        hidl_vec<uint8_t> pData(size);
+        int byte_rd, byte_avail;
+
+        ret.ret = true;
+        // ALOGV("Start CoproSerialPort::read %d", mFdRpmsg);
+
+        if(mFdRpmsg == -1)
+        {
+            ALOGE("Error reading %s, fileDescriptor is not set", SERIAL_DEVICE_PATH);
+            ret.ret = false;
+        }
+        else
+        {
+            ioctl(mFdRpmsg, FIONREAD, &byte_avail);
+
+            // ALOGV("CoproSerialPort::read byte to read : %d", byte_avail);
+            if (byte_avail > 0)
+            {
+                pData.resize(byte_avail);
+                byte_rd = ::read (mFdRpmsg, pData.data(), byte_avail);
+                ALOGI("readTtyRpmsg, read successfully %d bytes", byte_rd);
+            }
+        }
+
+        // ALOGV("End CoproSerialPort::read");
+
+        _hidl_cb(ret, pData);
+
+        return Void();
+    }
+
+
     Return<void> CoproSerialPort::write(const hidl_string& command, ICoproSerialPortHal::write_cb _hidl_cb) {
         RequestStatus ret;
         std::string pData = std::string(command);
@@ -173,7 +207,6 @@ namespace implementation {
         }
         else
         {
-
             // ALOGV("CoproSerialPort::write call write");
             if(::write(mFdRpmsg, pData.c_str(), pData.size()) <= 0)
             {
@@ -184,6 +217,36 @@ namespace implementation {
         // ALOGV("End CoproSerialPort::write");
 
         _hidl_cb(ret);
+
+        return Void();
+    }
+
+    Return<void> CoproSerialPort::writeB(const hidl_vec<uint8_t>& command, ICoproSerialPortHal::writeB_cb _hidl_cb) {
+        RequestStatus ret;
+        int ret_val = -1;
+        hidl_vec<unsigned char> pData = command;
+
+        ret.ret = true;
+        // ALOGV("Start CoproSerialPort::write %d", mFdRpmsg);
+        if(mFdRpmsg == -1)
+        {
+            ALOGE("Error writing %s, fileDescriptor is not set", SERIAL_DEVICE_PATH);
+            ret.ret = false;
+        }
+        else
+        {
+            //ALOGV("CoproSerialPort::write start with 0x%x", pData[0]);
+            ret_val = ::write(mFdRpmsg, pData.data(), pData.size());
+            if(ret_val <= 0)
+            {
+                //ALOGE("Error writing [%s] on %s, fileDescriptor is not set", pData.c_str(), SERIAL_DEVICE_PATH);
+                ALOGE("Error writing on %s, fileDescriptor is not set", SERIAL_DEVICE_PATH);
+                ret.ret = false;
+            }
+        }
+        // ALOGV("End CoproSerialPort::write");
+
+        _hidl_cb(ret, ret_val);
 
         return Void();
     }
